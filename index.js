@@ -56,7 +56,9 @@ app.post("/login", (req, res) => {
         res.status(404).send("Username or Password invalid")
     }
     const token = jwt.sign(user, secretKey, { expiresIn: '24h' });
-    res.send({ token, user });
+    const userCopy = { ...user }
+    delete userCopy.password;
+    res.send({ token, user: userCopy });
 })
 
 authentification = (req, res, next) => {
@@ -64,6 +66,7 @@ authentification = (req, res, next) => {
     let decoded;
     try {
         decoded = jwt.verify(token, secretKey);
+        req.user = decoded;
     } catch(error) {
         res.status(401).send("Token Invalid");
     }
@@ -75,7 +78,8 @@ authentification = (req, res, next) => {
 app.use(authentification)
 
 app.get("/users", (req, res) => {
-    res.send(users);
+
+    res.send(users.filter(item => item.id === req.user.id));
 })
 
 app.get("/", (req, res) => {
@@ -83,13 +87,11 @@ app.get("/", (req, res) => {
 });
 
 app.get("/tasks", (req, res) => {
-    const token = req.headers.token;
-    const user = jwt.verify(token, secretKey);
-    res.send(tasks.filter(item => item.assigner === user.id))
+    res.send(tasks)
 });
 app.post("/tasks", (request, response) => {
     const data = request.body;
-    tasks.push(data);
+    tasks.push({ ...data, owner: request.user.id });
     response.send(data)
 
 })
