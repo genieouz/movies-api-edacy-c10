@@ -1,114 +1,46 @@
 const express = require("express");
 const bodyParser = require("body-parser");
 const cors = require("cors");
-const jwt = require("jsonwebtoken");
-
+const path = require('path');
+const mongoose = require("mongoose");
+const lamda = require("./modules/utils").lamda2;
+lamda(10, 20);
 const app = express();
-
+app.set('view engine', 'ejs');
+app.set('views', path.join(__dirname, 'views'));
 app.use(cors());
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json());
-const secretKey = "secretKey";
-const users = [
-    {
-        "username": "Magib",
-        "id": "1",
-        "password": "123"
-    },
-    {
-        "username": "Nouha",
-        "id": "2",
-        "password": "123"
-    },
-    {
-        "username": "Moustapha",
-        "id": "3",
-        "password": "123"
-    }
-]
 
-const tasks = [
-    {
-        "title": "Creer Login page",
-        "description": "Creer une page de login",
-        "statut": "TO DO",
-        "id": "1",
-        "assigner": "1"
-    },
-    {
-        "title": "Creer Register page",
-        "description": "Creer une page de register",
-        "statut": "TO DO",
-        "id": "4",
-        "assigner": "2"
-    }
-]
 
-app.post("/register", (req, res) => {
-    users.push(req.body);
-    res.send(req.body);
-})
 
-app.post("/login", (req, res) => {
-    const data = req.body;
-    const user = users.find((item) => item.username === data.username && item.password === data.password);
-    if(!user) {
-        res.status(404).send("Username or Password invalid")
-    }
-    const token = jwt.sign(user, secretKey, { expiresIn: '24h' });
-    const userCopy = { ...user }
-    delete userCopy.password;
-    res.send({ token, user: userCopy });
-})
 
-authentification = (req, res, next) => {
-    const token = req.headers.token;
-    let decoded;
-    try {
-        decoded = jwt.verify(token, secretKey);
-        req.user = decoded;
-    } catch(error) {
-        res.status(401).send("Token Invalid");
+mongoose.connect("mongodb+srv://edacytalent:12345@cluster0.9z1a3.mongodb.net/?retryWrites=true&w=majority")
+.then(() => {
+    console.log("Successfully connected to Atlas DB");
+    initApp();
+}).catch(
+    (error) => {
+        console.error(error);
     }
-    if(!token) {
-        res.status(401).send("Not connected yet")
-    }
-    next();
+)
+
+async function initApp() {
+
+    app.get('/taches', async (req, res) => {
+        const status = req.query.status;
+        console.log({status})
+        const user = { firstName: "John", lastName: "Bishop" }
+        const taskList = await taskModel.find({ status: { $regex: status, $options: "i" } });
+        // const taskList = await taskModel.find({ status: status })
+        res.status(200).render('index', { user, taches: taskList });
+    })
+
+    require('./modules/auth/auth.routes')(app);
+    require('./modules/auth/auth.guard')(app);
+    require('./modules/tasks/task.routes')(app);
+    
 }
-app.use(authentification)
-
-app.get("/users", (req, res) => {
-
-    res.send(users.filter(item => item.id === req.user.id));
-})
-
-app.get("/", (req, res) => {
-    res.send("Hello world")
-});
-
-app.get("/tasks", (req, res) => {
-    res.send(tasks)
-});
-app.post("/tasks", (request, response) => {
-    const data = request.body;
-    tasks.push({ ...data, owner: request.user.id });
-    response.send(data)
-
-})
-
-app.get("/tasks/:taskId", (request, response) => {
-    const taskId = request.params.taskId;
-    const task = tasks.find((item) => item.id === taskId);
-    response.send(task)
-});
-
-app.put("/tasks/:taskId", (req, res) => {
-    const data = req.body;
-    const taskId = req.params.taskId;
-    const taskIndex = tasks.findIndex((item) => item.id === taskId);
-    tasks[taskIndex] = Object.assign(tasks[taskIndex], data);
-    res.send(tasks[taskIndex]);
-})
 
 
 app.listen(3000, () => {

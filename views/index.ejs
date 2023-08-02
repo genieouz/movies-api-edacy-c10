@@ -1,0 +1,32 @@
+<html>
+    <head>
+        <title>Gestionnaire de tâches</title>
+        <style>
+            table td {
+                border: 1px solid black;
+                width: 200px;
+                height: 45px;
+            }
+        </style>
+    </head>
+    <body>
+        <%- include('header') %>
+        <h1>TASK MANAGER</h1>
+        <h3>Liste des taches pour <%= user.firstName %> <%= user.lastName %></h3>
+        <table>
+            <tr>
+                <td>Id</td>
+                <td>Title</td>
+                <td>Status</td>
+            </tr>
+            <% taches.forEach((tache) => { %>
+                <tr>
+                    <td><%= tache.id %></td>
+                    <td><%= tache.title %></td>
+                    <td><%= tache.status %></td>
+                </tr>
+            <% }); %>
+            
+        </table>
+    </body>
+</html>
