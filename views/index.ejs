@@ -1,6 +1,15 @@
 <html>
     <head>
         <title>Gestionnaire de tâches</title>
+        <script src="/socket.io/socket.io.js"></script>
+        <script>
+          const socket = io();
+          socket.on('newItem', (item) => {
+            const newItemLine = document.createElement('li');
+            newItemLine.textContent = `${item.title} - ${item.status}`;
+            document.getElementById('items').appendChild(newItemLine);
+          });
+        </script>
         <style>
             table td {
                 border: 1px solid black;
@@ -13,20 +22,34 @@
         <%- include('header') %>
         <h1>TASK MANAGER</h1>
         <h3>Liste des taches pour <%= user.firstName %> <%= user.lastName %></h3>
-        <table>
-            <tr>
-                <td>Id</td>
-                <td>Title</td>
-                <td>Status</td>
-            </tr>
+
+
+
+        <ul id="items">
+            <!-- Les items seront ajoutés ici en temps réel -->
             <% taches.forEach((tache) => { %>
-                <tr>
-                    <td><%= tache.id %></td>
-                    <td><%= tache.title %></td>
-                    <td><%= tache.status %></td>
-                </tr>
-            <% }); %>
-            
-        </table>
+              <li><%= tache.title %> - <%= tache.status %></li>
+          <% }); %>
+          </ul>
+        
+          <form id="itemForm">
+            <input type="text" name="title" placeholder="Titre" required>
+            <input type="text" name="status" placeholder="Statut" required>
+            <button type="submit">Ajouter</button>
+          </form>
+        
+          <script>
+            const formTask = document.getElementById('itemForm')
+            formTask.addEventListener('submit', (event) => {
+              event.preventDefault();
+              const formData = new FormData(event.target);
+              const item = {};
+              formData.forEach((value, key) => {
+                item[key] = value;
+              });
+              socket.emit('addItem', item);
+              event.target.reset();
+            });
+          </script>
     </body>
 </html>
