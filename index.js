@@ -12,8 +12,8 @@ app.use(cors());
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json());
 
-
-
+// REALTIME SOCKET IO
+const socketIo = require('socket.io');
 
 mongoose.connect("mongodb+srv://edacytalent:12345@cluster0.9z1a3.mongodb.net/?retryWrites=true&w=majority")
 .then(() => {
@@ -45,4 +45,4 @@ async function initApp() {
 
 app.listen(3000, () => {
     console.log("App is listening on port 3000");
-})
+});
